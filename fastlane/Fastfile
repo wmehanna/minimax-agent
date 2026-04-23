@@ -1,0 +1,39 @@
+default_platform(:mac)
+
+platform :mac do
+  desc "Build and archive the app for distribution"
+  lane :build_release do
+    increment_build_number(
+      build_number: ENV["BUILD_NUMBER"] || Time.now.strftime("%Y%m%d%H%M"),
+      xcodeproj: "MiniMaxAgent.xcodeproj"
+    )
+
+    gym(
+      scheme: "MiniMaxAgent",
+      project: "MiniMaxAgent.xcodeproj",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "build",
+      output_name: "MiniMaxAgent.pkg",
+      clean: true
+    )
+  end
+
+  desc "Upload to TestFlight"
+  lane :upload_testflight do
+    build_release
+
+    pilot(
+      pkg: "build/MiniMaxAgent.pkg",
+      skip_waiting_for_build_processing: true,
+      changelog: ENV["RELEASE_NOTES"] || "Bug fixes and performance improvements."
+    )
+  end
+
+  desc "Build, upload to TestFlight, and notify"
+  lane :beta do
+    upload_testflight
+
+    say("TestFlight upload complete")
+  end
+end

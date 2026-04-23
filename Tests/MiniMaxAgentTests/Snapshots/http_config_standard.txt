@@ -1,0 +1,1 @@
+maxRetries=5 defaultRetryDelay=60.0 maxRetryDelay=3600.0 baseDelay=1.0 backoffMultiplier=2.0 jitterFactor=0.1 timeout=30.0

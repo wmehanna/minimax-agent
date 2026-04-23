@@ -1,0 +1,95 @@
+name: Archive & Export
+
+on:
+  workflow_dispatch:
+    inputs:
+      export_method:
+        description: "Export method (developer-id, app-store, development)"
+        required: false
+        default: "developer-id"
+      configuration:
+        description: "Build configuration (Release or Debug)"
+        required: false
+        default: "Release"
+
+jobs:
+  archive:
+    name: Archive & Export
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+      - name: Import signing certificate
+        if: ${{ env.CERTIFICATE_P12_BASE64 != '' }}
+        env:
+          CERTIFICATE_P12_BASE64: ${{ secrets.CERTIFICATE_P12_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+        run: bash scripts/ci-import-certificate.sh
+
+      - name: Install provisioning profile
+        if: ${{ env.PROVISIONING_PROFILE_BASE64 != '' }}
+        env:
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          PP_PATH="$RUNNER_TEMP/profile.provisionprofile"
+          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o "$PP_PATH"
+          PP_UUID=$(grep -a -A1 '<key>UUID</key>' "$PP_PATH" \
+            | grep '<string>' \
+            | sed 's/.*<string>\(.*\)<\/string>.*/\1/' \
+            | head -1)
+          PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILES_DIR"
+          cp "$PP_PATH" "$PROFILES_DIR/$PP_UUID.provisionprofile"
+          rm -f "$PP_PATH"
+          echo "Installed provisioning profile: $PP_UUID"
+
+      - name: Archive
+        env:
+          CONFIGURATION: ${{ github.event.inputs.configuration || 'Release' }}
+          ARCHIVE_PATH: ${{ runner.temp }}/MiniMaxAgent.xcarchive
+        run: |
+          chmod +x scripts/archive.sh
+          ./scripts/archive.sh \
+            --configuration "$CONFIGURATION" \
+            --archive-path "$ARCHIVE_PATH"
+
+      - name: Export archive
+        if: ${{ env.CODE_SIGN_IDENTITY != '-' && env.CODE_SIGN_IDENTITY != '' }}
+        env:
+          EXPORT_METHOD: ${{ github.event.inputs.export_method || 'developer-id' }}
+          ARCHIVE_PATH: ${{ runner.temp }}/MiniMaxAgent.xcarchive
+          EXPORT_PATH: ${{ runner.temp }}/export
+          TEAM_ID: ${{ secrets.TEAM_ID }}
+        run: |
+          ./scripts/archive.sh \
+            --export \
+            --export-method "$EXPORT_METHOD" \
+            --archive-path "$ARCHIVE_PATH" \
+            --export-path "$EXPORT_PATH"
+
+      - name: Upload xcarchive artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniMaxAgent-${{ github.sha }}.xcarchive
+          path: ${{ runner.temp }}/MiniMaxAgent.xcarchive
+          retention-days: 30
+
+      - name: Upload exported app artifact
+        if: ${{ env.CODE_SIGN_IDENTITY != '-' && env.CODE_SIGN_IDENTITY != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniMaxAgent-${{ github.sha }}-export
+          path: ${{ runner.temp }}/export
+          retention-days: 30
+
+      - name: Clean up keychain
+        if: always()
+        run: |
+          security delete-keychain ci-build.keychain 2>/dev/null || true

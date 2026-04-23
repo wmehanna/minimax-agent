@@ -1,0 +1,71 @@
+{
+  "name": "minimax-agent",
+  "description": "MiniMax Agent clone — macOS AI assistant with Claude Code-style autonomous coding",
+  "version": "0.1.0",
+  "repository": {
+    "path": "~/git/minimax-agent",
+    "remote": "https://github.com/YOUR_GITHUB/minimax-agent.git",
+    "default_branch": "main"
+  },
+  "project": {
+    "type": "swift-swiftui-xcodegen",
+    "platform": "macos",
+    "tasks_file": "macos_agent_tasks.md",
+    "phases": [
+      { "name": "Phase 1", "focus": "Project Setup & Shell", "priority": "P0", "tasks": "~40" },
+      { "name": "Phase 2", "focus": "Core Chat Interface", "priority": "P0", "tasks": "~60" },
+      { "name": "Phase 3", "focus": "MiniMax API Integration", "priority": "P0", "tasks": "~25" },
+      { "name": "Phase 4", "focus": "Agentic Coding Engine", "priority": "P0", "tasks": "~70" },
+      { "name": "Phase 5", "focus": "Floating Ball Widget", "priority": "P1", "tasks": "~15" },
+      { "name": "Phase 6", "focus": "Preferences & Settings", "priority": "P1", "tasks": "~20" },
+      { "name": "Phase 7", "focus": "Native macOS Integration", "priority": "P1", "tasks": "~30" },
+      { "name": "Phase 8", "focus": "Performance & Reliability", "priority": "P2", "tasks": "~20" },
+      { "name": "Phase 9", "focus": "Testing & Quality", "priority": "P2", "tasks": "~20" },
+      { "name": "Phase 10", "focus": "Distribution", "priority": "P2", "tasks": "~15" }
+    ]
+  },
+  "skills": {
+    "default": ["code-review-fix-loop"],
+    "phase_skills": {
+      "P0": ["code-review-fix-loop", "deep-audit", "security-audit"],
+      "P1": ["code-review", "refactor-review"],
+      "P2": ["test-engineer", "test-coverage"]
+    }
+  },
+  "code_review": {
+    "loop_enabled": true,
+    "max_iterations": 10,
+    "auto_commit": true,
+    "auto_pr": true,
+    "auto_issue": true,
+    "categories": [
+      "bug_detection",
+      "security",
+      "code_conventions",
+      "api_contracts",
+      "edge_cases",
+      "performance"
+    ]
+  },
+  "github": {
+    "owner": "wmehanna",
+    "repo": "minimax-agent",
+    "default_branch": "main",
+    "pr_labels": ["code-review", "automated"],
+    "issue_labels": ["code-review", "remaining", "P0", "P1", "P2"]
+  },
+  "git": {
+    "commit_convention": "conventional",
+    "branch_prefix": {
+      "review": "review/phase",
+      "feature": "feature/phase",
+      "hotfix": "hotfix/"
+    }
+  },
+  "paths": {
+    "repo": "~/git/minimax-agent",
+    "spec": "~/git/minimax-agent/macos_agent_tasks.md",
+    "clone_spec": "~/git/minimax-agent/MINIMAX_AGENT_CLONE_SPEC.md",
+    "openclaw_config": "~/git/minimax-agent/openclaw.json"
+  }
+}

@@ -1,0 +1,1 @@
+Tool with ID 'tool-abc' is already registered
